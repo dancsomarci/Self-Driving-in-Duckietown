@@ -54,8 +54,13 @@ env.unwrapped.window.push_handlers(key_handler)
 
 import csv
 
+class Timer():
+    def __init__(self) -> None:
+        self.time = 0.0
+
 def update(dt):
     action = np.array([0.0, 0.0])
+    timer.time += dt
 
     if key_handler[key.UP] or key_handler[key.W]:
         action += np.array([1, 0])
@@ -70,11 +75,12 @@ def update(dt):
 
     obs, reward, done, info = env.step(action) # obs is the image seen or maybe after taking the action but it shouldn't matter because of high framerate
 
-    np.save(os.path.join(savepath, "{}#{}#{}".format(action[0], action[1], datetime.now().timestamp())), obs)
+    if timer.time >= 5.0: # start exporting after 5 seconds
+        np.save(os.path.join(savepath, "{}#{}#{}".format(action[0], action[1], datetime.now().timestamp())), obs)
 
     env.render()
 
-
+timer = Timer()
 pyglet.clock.schedule_interval(update, 1.0 / env.unwrapped.frame_rate)
 pyglet.app.run()
 env.close()
