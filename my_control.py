@@ -11,7 +11,7 @@ import os
 
 from traitlets import Bool
 
-savepath = "D:\\Asztal\\Tester" #TODO set!!
+savepath = "foldername" #TODO set!!
 
 if not os.path.isdir(savepath):
     os.mkdir(savepath)
