@@ -1,5 +1,6 @@
 
 import argparse
+from xmlrpc.client import Boolean
 import gym
 import numpy as np
 import pyglet
@@ -8,7 +9,9 @@ from gym_duckietown.envs import DuckietownEnv
 from datetime import datetime
 import os
 
-savepath = "foldername" #TODO set!!
+from traitlets import Bool
+
+savepath = "D:\\Asztal\\Tester" #TODO set!!
 
 if not os.path.isdir(savepath):
     os.mkdir(savepath)
@@ -47,6 +50,9 @@ resetEnv()
 def on_key_press(symbol, modifiers):
     if symbol == key.BACKSPACE: # BACKSPACE==RESET
         resetEnv()
+    
+    if symbol == key.P: # Start exporting when the P key is pressed
+        Exporter.shoud_export = not Exporter.shoud_export
 
 # Register a keyboard handler
 key_handler = key.KeyStateHandler()
@@ -54,13 +60,11 @@ env.unwrapped.window.push_handlers(key_handler)
 
 import csv
 
-class Timer():
-    def __init__(self) -> None:
-        self.time = 0.0
+class Exporter(object):
+    shoud_export = False
 
 def update(dt):
     action = np.array([0.0, 0.0])
-    timer.time += dt
 
     if key_handler[key.UP] or key_handler[key.W]:
         action += np.array([1, 0])
@@ -75,12 +79,11 @@ def update(dt):
 
     obs, reward, done, info = env.step(action) # obs is the image seen or maybe after taking the action but it shouldn't matter because of high framerate
 
-    if timer.time >= 5.0: # start exporting after 5 seconds
+    if Exporter.shoud_export:
         np.save(os.path.join(savepath, "{}#{}#{}".format(action[0], action[1], datetime.now().timestamp())), obs)
 
     env.render()
 
-timer = Timer()
 pyglet.clock.schedule_interval(update, 1.0 / env.unwrapped.frame_rate)
 pyglet.app.run()
 env.close()
