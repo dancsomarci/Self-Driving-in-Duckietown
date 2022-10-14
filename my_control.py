@@ -1,24 +1,17 @@
 
 import argparse
-from xmlrpc.client import Boolean
 import gym
 import numpy as np
 import pyglet
 from pyglet.window import key
 from gym_duckietown.envs import DuckietownEnv
-from datetime import datetime
 import os
 
-from traitlets import Bool
-
-savepath = "foldername" #TODO set!!
-
-if not os.path.isdir(savepath):
-    os.mkdir(savepath)
+from data_processor import DataProcessor
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--env-name", default=None)
-parser.add_argument("--map-name", default="udem1")
+parser.add_argument("--map-name", default="small_loop")
 parser.add_argument("--draw-curve", action="store_true", help="draw the lane following curve")
 parser.add_argument("--draw-bbox", action="store_true", help="draw collision detection bounding boxes")
 parser.add_argument("--domain-rand", action="store_true", help="enable domain randomization")
@@ -27,63 +20,82 @@ parser.add_argument("--distortion", default=False, action="store_true")
 parser.add_argument("--style", default="photos", choices=["photos", "synthetic", "synthetic-F", "smooth"])
 args = parser.parse_args()
 
-if args.env_name is None:
-    env = DuckietownEnv(
-        map_name=args.map_name,
-        draw_curve=args.draw_curve,
-        draw_bbox=args.draw_bbox,
-        domain_rand=args.domain_rand,
-        frame_skip=args.frame_skip,
-        distortion=args.distortion,
-        style=args.style,
-    )
-else:
-    env = gym.make(args.env_name)
+class Controller:
+    def __init__(self):
+        if args.env_name is None:
+            self.env = DuckietownEnv(
+                map_name=args.map_name,
+                draw_curve=args.draw_curve,
+                draw_bbox=args.draw_bbox,
+                domain_rand=args.domain_rand,
+                frame_skip=args.frame_skip,
+                distortion=args.distortion,
+                style=args.style,
+            )
+        else:
+            self.env = gym.make(args.env_name)
 
-def resetEnv():
-    env.reset()
-    env.render()
+        self.camera = DataProcessor()
+        self.is_recording = False
+        self.save_path = "savedData" #TODO set!!
 
-resetEnv()
+        if not os.path.isdir(self.save_path):
+            os.mkdir(self.save_path)
 
-@env.unwrapped.window.event
-def on_key_press(symbol, modifiers):
-    if symbol == key.BACKSPACE: # BACKSPACE==RESET
-        resetEnv()
-    
-    if symbol == key.P: # Start exporting when the P key is pressed
-        Exporter.shoud_export = not Exporter.shoud_export
+        self.env.render()
 
-# Register a keyboard handler
-key_handler = key.KeyStateHandler()
-env.unwrapped.window.push_handlers(key_handler)
+        @self.env.unwrapped.window.event
+        def on_key_press(symbol, modifiers):
+            if symbol == key.BACKSPACE: # BACKSPACE==RESET
+                self.resetEnv()
 
-import csv
+            if symbol == key.ESCAPE:
+                self.stop()
+            
+            if symbol == key.P or symbol == key.LSHIFT: # Start exporting when the P key or left-Shift is pressed
+                if self.is_recording:
+                    if input("Do you want to save the data? (y/n) ") == "y":
+                        self.camera.persist_memory(self.save_path)
+                else:
+                    print("Recording in progress...")
+                self.is_recording = not self.is_recording
+                   
 
-class Exporter(object):
-    shoud_export = False
+        self.key_handler = key.KeyStateHandler() # these 2 lines must be after "def on_key_press" !!!
+        self.env.unwrapped.window.push_handlers(self.key_handler)
 
-def update(dt):
-    action = np.array([0.0, 0.0])
+    def update(self, dt):
+        action = np.array([0.0, 0.0])
 
-    if key_handler[key.UP] or key_handler[key.W]:
-        action += np.array([1, 0])
-    if key_handler[key.DOWN] or key_handler[key.S]:
-        action += np.array([-1, 0])
-    if key_handler[key.LEFT] or key_handler[key.A]:
-        action += np.array([-0.5, 3])
-    if key_handler[key.RIGHT] or key_handler[key.D]:
-        action += np.array([-0.5, -3])
-    if key_handler[key.SPACE]:
-        action = np.array([0, 0])
+        if self.key_handler[key.W]:
+            action += np.array([1, 0])
+        if self.key_handler[key.S]:
+            action += np.array([-1, 0])
+        if self.key_handler[key.A]:
+            action += np.array([-0.5, 3])
+        if self.key_handler[key.D]:
+            action += np.array([-0.5, -3])
+        if self.key_handler[key.SPACE]:
+            action = np.array([0, 0])
 
-    obs, reward, done, info = env.step(action) # obs is the image seen or maybe after taking the action but it shouldn't matter because of high framerate
+        obs, reward, done, info = self.env.step(action) # obs is the image seen or maybe after taking the action but it shouldn't matter because of high framerate
 
-    if Exporter.shoud_export:
-        np.save(os.path.join(savepath, "{}#{}#{}".format(action[0], action[1], datetime.now().timestamp())), obs)
+        if self.is_recording:
+            self.camera.store_frame(((action[0], action[1]), obs))
 
-    env.render()
+        self.env.render()
 
-pyglet.clock.schedule_interval(update, 1.0 / env.unwrapped.frame_rate)
-pyglet.app.run()
-env.close()
+    def start(self):
+        pyglet.clock.schedule_interval(self.update, 1.0 / self.env.unwrapped.frame_rate)
+        pyglet.app.run()
+
+    def stop(self):
+        self.env.close()
+
+    def resetEnv(self):
+        self.env.reset()
+        self.env.render()
+
+
+controller = Controller()
+controller.start()
