@@ -5,8 +5,9 @@ import numpy as np
 import pyglet
 from pyglet.window import key
 from gym_duckietown.envs import DuckietownEnv
-from datetime import datetime
 import os
+
+from data_processor import DataProcessor
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--env-name", default=None)
@@ -18,35 +19,6 @@ parser.add_argument("--frame-skip", default=1, type=int, help="number of frames 
 parser.add_argument("--distortion", default=False, action="store_true")
 parser.add_argument("--style", default="photos", choices=["photos", "synthetic", "synthetic-F", "smooth"])
 args = parser.parse_args()
-
-class Camera:
-    def __init__(self):
-        self.file = None
-
-    def is_ready(self):
-        return self.file is not None
-
-    def init(self, save_path):
-        self.file = open(os.path.join(save_path, "{}".format(datetime.now().timestamp())), "ab")
-
-    # frame is an ndarray
-    def save_frame(self, frame):
-        if self.file is None:
-            return
-        self.file.write(frame.tobytes())
-        self.file.write("\n".encode('utf-8'))
-
-    def save_film(self):
-        if self.is_ready():
-            self.file.close()
-            self.file = None
-
-    def delete_film(self):
-        if self.is_ready():
-            self.file.close()
-            os.remove(self.file.name)
-            self.file = None
-
 
 class Controller:
     def __init__(self):
@@ -63,7 +35,8 @@ class Controller:
         else:
             self.env = gym.make(args.env_name)
 
-        self.camera = Camera()
+        self.camera = DataProcessor()
+        self.is_recording = False
         self.save_path = "savedData" #TODO set!!
 
         if not os.path.isdir(self.save_path):
@@ -80,13 +53,13 @@ class Controller:
                 self.stop()
             
             if symbol == key.P or symbol == key.LSHIFT: # Start exporting when the P key or left-Shift is pressed
-                if not self.camera.is_ready():
-                    self.camera.init(self.save_path)
+                if self.is_recording:
+                    if input("Do you want to save the data? (y/n) ") == "y":
+                        self.camera.persist_memory(self.save_path)
                 else:
-                    if input("Do you want to save the data? (y/n)") == "y":
-                        self.camera.save_film()
-                    else:
-                        self.camera.delete_film()
+                    print("Recording in progress...")
+                self.is_recording = not self.is_recording
+                   
 
         self.key_handler = key.KeyStateHandler() # these 2 lines must be after "def on_key_press" !!!
         self.env.unwrapped.window.push_handlers(self.key_handler)
@@ -107,8 +80,8 @@ class Controller:
 
         obs, reward, done, info = self.env.step(action) # obs is the image seen or maybe after taking the action but it shouldn't matter because of high framerate
 
-        self.camera.save_frame(obs)
-        print(obs.shape)
+        if self.is_recording:
+            self.camera.store_frame(((action[0], action[1]), obs))
 
         self.env.render()
 
