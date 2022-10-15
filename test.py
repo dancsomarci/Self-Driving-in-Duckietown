@@ -10,8 +10,8 @@ def handler(frame):
     '''preprocesses an image'''
     label, img = frame
 
-    cv2.imshow("Original", img)
-    cv2.waitKey(5)
+    #cv2.imshow("Original", img)
+    #cv2.waitKey(5)
     
     scale_precent = 0.2     # used for downscaling
     crop_amount = 35        # pixel amount for cropping
@@ -37,8 +37,11 @@ def handler(frame):
     normalized_img = (thresholded_img - mean) / std
     
     # showing image
-    print(normalized_img.shape)
-    cv2.imshow(str(label), normalized_img)
-    cv2.waitKey()
+    #print(normalized_img.shape)
+    #cv2.imshow(str(label), normalized_img)
+    #cv2.waitKey()
+
+    processedFrame = (label, normalized_img)
+    return processedFrame
 
 dp.for_each_frame_from_file("savedData", handler)

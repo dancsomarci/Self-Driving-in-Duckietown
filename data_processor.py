@@ -19,7 +19,15 @@ class DataProcessor:
         self.flush_memory() #!!!
 
     def for_each_frame_from_file(self, save_path, func_for_each_frame):
+        # make a directory for processed data
+        if not os.path.isdir('processedData'):
+            os.mkdir('processedData')
+
+        # process every raw data, and then save the processed data
         for filename in os.listdir(save_path):
             file = open(os.path.join(save_path, filename), "rb")
             for frame in pickle.load(file):
-                func_for_each_frame(frame)
+                processedFrame = func_for_each_frame(frame)
+                self.store_frame(processedFrame)
+
+            self.persist_memory('processedData')
