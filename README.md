@@ -3,7 +3,7 @@ The project is created as an assignment for the VITMAV45 University course at BM
 
 # Team: TescosTesla
 Members:
-* Marcell Dancsó - NEPTUN
+* Marcell Dancsó - AZTVS7
 * Milán Nyist - NEPTUN
 * Dániel Veress - C8P32R
 
