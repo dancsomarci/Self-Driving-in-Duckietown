@@ -1,13 +1,25 @@
 from matplotlib.pyplot import gray
-from data_processor import DataProcessor
+from data_processor import DataProcessor, DataSplitter
 import cv2
 import numpy as np
+import os
+import constants
 
 dp = DataProcessor()
+dsplitter = DataSplitter()
+
+# make a directory for processed data
+if not os.path.isdir(constants.processed_data_path):
+    os.mkdir(constants.processed_data_path)
+
+# make a directory for splitted data
+if not os.path.isdir(constants.split_data_path):
+    os.mkdir(constants.split_data_path)
 
 
 def handler(frame):
     '''preprocesses an image'''
+
     label, img = frame
 
     #cv2.imshow("Original", img)
@@ -42,6 +54,14 @@ def handler(frame):
     #cv2.waitKey()
 
     processedFrame = (label, normalized_img)
+
+    # as we have a new processed frame, we can just go ahead and put it into a dataset
+    dsplitter.store_frame(processedFrame)
+
     return processedFrame
 
-dp.for_each_frame_from_file("savedData", handler)
+# processing every raw data file
+dp.for_each_frame_from_file(constants.raw_data_path, constants.processed_data_path, handler)
+
+# saving the processed and splitted files
+dsplitter.persist_memory(constants.split_data_path)

@@ -1,4 +1,3 @@
-
 import argparse
 import gym
 import numpy as np
@@ -8,7 +7,9 @@ from gym_duckietown.envs import DuckietownEnv
 import os
 
 from data_processor import DataProcessor
+import constants
 
+# handling arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("--env-name", default=None)
 parser.add_argument("--map-name", default="small_loop")
@@ -20,7 +21,10 @@ parser.add_argument("--distortion", default=False, action="store_true")
 parser.add_argument("--style", default="photos", choices=["photos", "synthetic", "synthetic-F", "smooth"])
 args = parser.parse_args()
 
+
 class Controller:
+    '''Controls the bot, and saves data.'''
+
     def __init__(self):
         if args.env_name is None:
             self.env = DuckietownEnv(
@@ -37,7 +41,7 @@ class Controller:
 
         self.camera = DataProcessor()
         self.is_recording = False
-        self.save_path = "savedData" #TODO set!!
+        self.save_path = constants.raw_data_path
 
         if not os.path.isdir(self.save_path):
             os.mkdir(self.save_path)
@@ -60,7 +64,6 @@ class Controller:
                     print("Recording in progress...")
                 self.is_recording = not self.is_recording
                    
-
         self.key_handler = key.KeyStateHandler() # these 2 lines must be after "def on_key_press" !!!
         self.env.unwrapped.window.push_handlers(self.key_handler)
 

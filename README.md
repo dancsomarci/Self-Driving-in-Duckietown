@@ -15,13 +15,16 @@ Making a bot learn in a simulated environment to follow the lane as accurately a
     * starts a simulated environment
     * responsible for taking data from the simulated environment
 * data_processor.py       
-    * handles the data (saving, processing)
+    * saves the data to memory
+    * splits the data into training, testing and validation parts
 * test.py                   
-    * preprocesses raw data
+    * preprocesses raw data with opencv library
 * savedData directory       
     * raw data is stored in here
 * processedData directory   
     * preprocessed data is stored in here
+* splitData directory
+    * split data is stored here
 * maps directory
     * the different maps that the bot can run on
 * gym_duckietown directory
@@ -34,6 +37,6 @@ Making a bot learn in a simulated environment to follow the lane as accurately a
 3. To run the simulation: ./my_control.py [--env-name map_name]
     * To start or stop collection data: press P or left Shift once
     * To exit: press escape
-4. To start preprocessing data: ./test.py
+4. To start preprocessing and splitting of raw data: ./test.py
     * This will downscale, crop etc. the image
-5. To separate the data to a training, testing and validation dataset, run: TODO
+    * This will also split the data into training, testing and validation parts
