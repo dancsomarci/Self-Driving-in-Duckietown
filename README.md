@@ -42,7 +42,7 @@ Making a bot learn in a simulated environment to follow the lane as accurately a
 
 1. Start a console.
 2. Navigate to the directory where my_control.py is located.
-3. To run the simulation: ./my_control.py [--env-name map_name]
+3. To run the simulation: ./my_control.py [--map-name map_name]
    - To start or stop collection data: press P or left Shift once
    - To exit: press escape
 4. To start preprocessing and splitting of raw data: ./test.py
