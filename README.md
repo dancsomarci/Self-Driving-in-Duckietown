@@ -22,7 +22,7 @@ Making a bot learn in a simulated environment to follow the lane as accurately a
 - data_processor.py
   - saves the data to memory
   - splits the data into training, testing and validation parts
-- test.py
+- preprocess.py
   - preprocesses raw data with opencv library
 - Visualisation.ipynb
   - notebook to show the dataset visualised
@@ -45,6 +45,6 @@ Making a bot learn in a simulated environment to follow the lane as accurately a
 3. To run the simulation: ./my_control.py [--map-name map_name]
    - To start or stop collection data: press P or left Shift once
    - To exit: press escape
-4. To start preprocessing and splitting of raw data: ./test.py
+4. To start preprocessing and splitting of raw data: ./preprocess.py
    - This will downscale, crop etc. the image
    - This will also split the data into training, testing and validation parts
