@@ -21,9 +21,6 @@ def handler(frame):
     '''preprocesses an image'''
 
     label, img = frame
-
-    #cv2.imshow("Original", img)
-    #cv2.waitKey(5)
     
     scale_precent = 0.2     # used for downscaling
     crop_amount = 35        # pixel amount for cropping
@@ -38,7 +35,7 @@ def handler(frame):
     cropped_img = down_scaled_img[crop_amount : ds_size[0], 0 : ds_size[1]]
 
     # grayscaling
-    grayscale_img = cv2.cvtColor(cropped_img, cv2.COLOR_BGR2GRAY)
+    grayscale_img = cv2.cvtColor(cropped_img, cv2.COLOR_RGB2GRAY)
 
     # thresholding
     threshold, thresholded_img = cv2.threshold(grayscale_img, 150, 255, cv2.THRESH_BINARY)
@@ -47,11 +44,6 @@ def handler(frame):
     mean = np.mean(thresholded_img)
     std = np.std(thresholded_img)
     normalized_img = (thresholded_img - mean) / std
-    
-    # showing image
-    #print(normalized_img.shape)
-    #cv2.imshow(str(label), normalized_img)
-    #cv2.waitKey()
 
     processedFrame = (label, normalized_img)
 
