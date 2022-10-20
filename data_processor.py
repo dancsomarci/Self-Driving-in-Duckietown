@@ -18,14 +18,6 @@ class DataProcessor:
     def persist_memory(self, save_path: str):
         file = open(os.path.join(save_path, "{}".format(datetime.now().timestamp())), "wb")
 
-        ''' Writing a video
-        out = cv2.VideoWriter('video.mp4')
-        for frame in pickle.load(file):
-            label, img = frame
-
-            out.write(img)
-        out.release() '''
-
         pickle.dump(self.memory, file)
         file.close()
         self.__flush_memory() #!!!

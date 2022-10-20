@@ -776,7 +776,7 @@ class Simulator(gym.Env):
         self.map_name = map_name
 
         # Get the full map file path
-        self.map_file_path = get_resource_path(f"{map_name}.yaml")
+        self.map_file_path = os.getcwd() + f'/maps/{map_name}.yaml'     # = get_resource_path(f"{map_name}.yaml")
 
         logger.debug(f'loading map file "{self.map_file_path}"')
 

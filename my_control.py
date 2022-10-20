@@ -12,7 +12,7 @@ import constants
 # handling arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("--env-name", default=None)
-parser.add_argument("--map-name", default="our_road"); #small_loop")
+parser.add_argument("--map-name", default="our_road"); # our road is the default road
 parser.add_argument("--draw-curve", action="store_true", help="draw the lane following curve")
 parser.add_argument("--draw-bbox", action="store_true", help="draw collision detection bounding boxes")
 parser.add_argument("--domain-rand", action="store_true", help="enable domain randomization")
