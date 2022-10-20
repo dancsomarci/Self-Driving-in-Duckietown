@@ -12,13 +12,15 @@ Members:
 
 # About the project:
 
-Making a bot learn in a simulated environment to follow the lane as accurately as possible.
+Making a bot learn in a simulated environment to follow the lane as accurately as possible with different deep learning techniques.
 
 # Files:
 
 - my_control.py
   - starts a simulated environment
-  - responsible for taking data from the simulated environment
+- conroller.py
+  - responsible for controlling the environment
+  - acquire data from it
 - data_processor.py
   - saves the data to memory
   - splits the data into training, testing and validation parts

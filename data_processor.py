@@ -3,7 +3,6 @@ import os
 import pickle
 import random
 import constants
-import cv2
 
 class DataProcessor:
     def __init__(self):
@@ -22,17 +21,21 @@ class DataProcessor:
         file.close()
         self.__flush_memory() #!!!
 
-    def for_each_frame_from_file(self, data_path, save_path, func_for_each_frame):
-        # process every raw data, and then save the processed data
+    def frames(self, data_path):
         for filename in os.listdir(data_path):
             file = open(os.path.join(data_path, filename), "rb")
             for frame in pickle.load(file):
-                processedFrame = func_for_each_frame(frame)
-                self.store_frame(processedFrame)
+                yield frame
 
-            self.persist_memory(save_path)
+    def for_each_frame_from_file(self, data_path, save_path, func_for_each_frame):
+        # process every raw data, and then save the processed data
+        for frame in self.frames(data_path):
+            processedFrame = func_for_each_frame(frame)
+            self.store_frame(processedFrame)
 
+        self.persist_memory(save_path) #ez miért kell, ha van dataSplitter is? szerintem elég lenne itt kimenteni majd tanításnál bekeverni
 
+    
 class DataSplitter():
     '''Splits the data into 3 categories, and saves them to their respective file.'''
 
