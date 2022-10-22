@@ -32,12 +32,8 @@ Here is a preview of the controller, while driving on our own map: https://youtu
   - preprocesses raw data with opencv library
 - Visualisation.ipynb
   - notebook to show the dataset visualised
-- savedData directory
-  - raw data is stored in here
-- processedData directory
-  - preprocessed data is stored in here
-- splitData directory
-  - split data is stored here
+-splitdata_demo.py
+  - demo for using the preprocessed data, and normalizing it for training
 - maps directory
   - the different maps that the bot can run on
 - gym_duckietown directory
