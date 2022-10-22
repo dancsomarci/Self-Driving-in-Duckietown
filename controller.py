@@ -68,7 +68,8 @@ class MyController:
         if self.key_handler[key.SPACE]:
             action = np.array([0, 0])
 
-        obs, _, _, _ = self.env.step(action) # obs is the image seen after taking the action but it shouldn't matter because of high framerates
+        # obs is the image seen after taking the action but it shouldn't matter because of high framerates
+        obs, _, _, _ = self.env.step(action)
 
         if self.is_recording:
             self.camera.store_frame(((action[0], action[1]), obs))

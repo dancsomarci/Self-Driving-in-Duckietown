@@ -1,4 +1,4 @@
-from data_processor import DataProcessor, DataSplitter
+from data_processor import DataProcessor
 import cv2
 import numpy as np
 import os
@@ -6,7 +6,6 @@ import constants
 
 def script():
     dp = DataProcessor()
-    dsplitter = DataSplitter()
 
     # make a directory for processed data
     if not os.path.isdir(constants.processed_data_path):
@@ -37,28 +36,18 @@ def script():
         grayscale_img = cv2.cvtColor(cropped_img, cv2.COLOR_RGB2GRAY)
 
         # thresholding
-        threshold, thresholded_img = cv2.threshold(grayscale_img, 150, 255, cv2.THRESH_BINARY)
+        _, thresholded_img = cv2.threshold(grayscale_img, 150, 255, cv2.THRESH_BINARY)
 
-        # normalization
-        mean = np.mean(thresholded_img)
-        std = np.std(thresholded_img)
-        normalized_img = (thresholded_img - mean) / std
-
-        processedFrame = (label, normalized_img)
+        processedFrame = (label, np.array(thresholded_img))
 
         # as we have a new processed frame, we can just go ahead and put it into a dataset
-        dsplitter.store_frame(processedFrame)
-
-        return processedFrame
-
-    # processing every raw data file
-    dp.for_each_frame_from_file(constants.raw_data_path, constants.processed_data_path, handler)
-
-    # saving the processed and splitted files
-    dsplitter.persist_memory(constants.split_data_path)
+        dp.store_frame(processedFrame)
 
     for frame in dp.frames(constants.raw_data_path):
         handler(frame) 
+
+    dp.shuffle_frames()
+    dp.persist_memory(constants.processed_data_path, "processedData")
 
 if __name__ == "__main__":
     script()
