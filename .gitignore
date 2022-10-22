@@ -2,3 +2,5 @@ splitData/*
 processedData/*
 savedData/*
 *.pyc
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
