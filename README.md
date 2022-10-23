@@ -49,9 +49,9 @@ Making a bot learn in a simulated environment to follow the lane as accurately a
 1. Start a console.
 2. Navigate to the directory where my_control.py is located.
 3. To run the simulation: ./my_control.py [--map-name map_name]
-   - To start or stop collection data: press P or left Shift once
+   - To start or stop collecting data: press P or left Shift once
    - To exit: press escape
-4. To start preprocessing and splitting of raw data: ./preprocess.py
-   - This will downscale, crop etc. the image
+4. To start the preprocessing of raw data: ./preprocess.py
+   - This will downscale, crop etc. the images, shuffle them, and store them presistantly to the folder defined in constants.py as "processed_data_path".
 5. To split the data into training, testing and validation sets: ./splitdata_demo.py
-   - This will split the data.
+   - This will split the data and demonstrate the normalization process.
