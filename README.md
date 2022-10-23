@@ -14,9 +14,11 @@ Members:
 
 Making a bot learn in a simulated environment to follow the lane as accurately as possible with different deep learning techniques.
 
-# Test Driving:
+# Links:
 
-Here is a preview of the controller, while driving on our own map: https://youtu.be/yeaDMzU-XvI 
+* Here is a preview of the controller, while driving on our own map: https://youtu.be/yeaDMzU-XvI 
+* Drive link, where we store the processed data: https://drive.google.com/drive/folders/1qC-w2b-WBtoXA9E3Cql4zntL-kaU6D7D?usp=sharing
+  * Data will be added later on to reach a big enough dataset.
 
 # Files:
 
@@ -24,18 +26,20 @@ Here is a preview of the controller, while driving on our own map: https://youtu
   - starts a simulated environment
 - conroller.py
   - responsible for controlling the environment
-  - acquire data from it
+  - acquire data from the environment
 - data_processor.py
   - saves the data to memory
-  - splits the data into training, testing and validation parts
 - preprocess.py
   - preprocesses raw data with opencv library
 - Visualisation.ipynb
   - notebook to show the dataset visualised
--splitdata_demo.py
+- splitdata_demo.py
   - demo for using the preprocessed data, and normalizing it for training
+- constants.py
+  - a file for constant values (e.g, data paths)
 - maps directory
   - the different maps that the bot can run on
+  - our_road.yaml - the road that we made for training
 - gym_duckietown directory
   - the different file for the simulation environment
     (the files are taken from the following publicly available repo: https://github.com/duckietown/gym-duckietown/tree/daffy/src/gym_duckietown)
@@ -49,4 +53,5 @@ Here is a preview of the controller, while driving on our own map: https://youtu
    - To exit: press escape
 4. To start preprocessing and splitting of raw data: ./preprocess.py
    - This will downscale, crop etc. the image
-   - This will also split the data into training, testing and validation parts
+5. To split the data into training, testing and validation sets: ./splitdata_demo.py
+   - This will split the data.
