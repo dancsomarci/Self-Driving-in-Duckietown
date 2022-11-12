@@ -41,9 +41,9 @@ Making a bot learn in a simulated environment to follow the lane as accurately a
   - demo for using the preprocessed data, and normalizing it for training
 - constants.py
   - a file for constant values (e.g, data paths)
-- env
+- env.py
   - create the environment where the reinforcement learning agent will be learning
-- wrappers
+- wrappers.py
   - environment wrappers to modify the base environment
 - maps directory
   - the different maps that the bot can run on
