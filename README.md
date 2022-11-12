@@ -16,9 +16,9 @@ Making a bot learn in a simulated environment to follow the lane as accurately a
 
 # Links:
 
-* Here is a preview of the controller, while driving on our own map: https://youtu.be/yeaDMzU-XvI 
-* Drive link, where we store the processed data: https://drive.google.com/drive/folders/1qC-w2b-WBtoXA9E3Cql4zntL-kaU6D7D?usp=sharing
-  * Data will be added later on to reach a big enough dataset.
+- Here is a preview of the controller, while driving on our own map: https://youtu.be/yeaDMzU-XvI
+- Drive link, where we store the processed data: https://drive.google.com/drive/folders/1qC-w2b-WBtoXA9E3Cql4zntL-kaU6D7D?usp=sharing
+  - Data will be added later on to reach a big enough dataset.
 
 # Files:
 
@@ -33,10 +33,18 @@ Making a bot learn in a simulated environment to follow the lane as accurately a
   - preprocesses raw data with opencv library
 - Visualisation.ipynb
   - notebook to show the dataset visualised
+- A2C_Baseline.ipynb
+  - notebook for A2C reinforcement learning algorithm
+- PPO_Baseline.ipynb
+  - notebook for PPO reinforcement learning algorithm
 - splitdata_demo.py
   - demo for using the preprocessed data, and normalizing it for training
 - constants.py
   - a file for constant values (e.g, data paths)
+- env
+  - create the environment where the reinforcement learning agent will be learning
+- wrappers
+  - environment wrappers to modify the base environment
 - maps directory
   - the different maps that the bot can run on
   - our_road.yaml - the road that we made for training
