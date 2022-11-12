@@ -4,3 +4,4 @@ savedData/*
 *.pyc
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
+*.hdf5

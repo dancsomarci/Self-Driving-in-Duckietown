@@ -1,6 +1,6 @@
 import argparse
 
-from controller import MyController
+from controller import MyController, ModelController
 
 def script():
     parser = argparse.ArgumentParser()
@@ -14,7 +14,8 @@ def script():
     parser.add_argument("--style", default="photos", choices=["photos", "synthetic", "synthetic-F", "smooth"])
     args = parser.parse_args()
     
-    controller = MyController(args)
+    #controller = MyController(args)
+    controller = ModelController(args)
     controller.start()
 
 if __name__ == "__main__":
