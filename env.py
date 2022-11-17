@@ -9,14 +9,14 @@ from wrappers import (
     SteeringToWheelVelWrapper,
 )
 
-def launch_env(id=None):
+def launch_env(id=None, map="loop_empty"):
     env = None
     if id is None:
         from gym_duckietown.simulator import Simulator
 
         env = Simulator(
             seed=123,  # random seed
-            map_name="loop_empty",
+            map_name=map,
             max_steps=500001,  # we don't want the gym to reset itself
             domain_rand=False,
             camera_width=640,
