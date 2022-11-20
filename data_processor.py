@@ -17,8 +17,11 @@ class DataProcessor:
     def __flush_memory(self):
         self.memory = []
 
-    def persist_memory(self, save_path: str, filename=datetime.now().timestamp()):
-        file = open(os.path.join(save_path, filename), "wb")
+    def persist_memory(self, save_path: str, filename=None):
+        if filename is None:
+            filename = datetime.now().timestamp()
+            
+        file = open(os.path.join(save_path, str(filename)), "wb")
 
         pickle.dump(self.memory, file)
         file.close()

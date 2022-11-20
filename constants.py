@@ -15,3 +15,7 @@ validation_data_size = 0.1
 train_data_name = 'training_data'
 test_data_name = 'testing_data'
 validation_data_name = 'validation_data'
+
+# weights name for keras.load_model
+regression_model_weights_filename = 'regression_model_weights.hdf5'
+classification_model_weights_filename = 'classification_model_weights.hdf5'

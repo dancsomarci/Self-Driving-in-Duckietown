@@ -9,6 +9,7 @@ import cv2
 
 from data_processor import DataProcessor
 import constants
+from preprocess import imageTransform
 
 class Controller:
     def __init__(self, args):
@@ -39,7 +40,20 @@ class Controller:
         self.env.reset()
         self.env.render()
 
+def calc_input(key_handler):
+    action = np.array([0.0, 0.0])
 
+    if key_handler[key.A] and key_handler[key.W]:
+        action += np.array([0.5, 3])
+    elif key_handler[key.D] and key_handler[key.W]:
+        action += np.array([0.5, -3])
+    elif key_handler[key.W]:
+        action += np.array([1, 0])
+    elif key_handler[key.S]:
+        action += np.array([-1, 0])
+
+    return action
+    
 class MyController(Controller):
     '''Handles the gym environment and controls for the bot.'''
 
@@ -75,24 +89,12 @@ class MyController(Controller):
         self.env.unwrapped.window.push_handlers(self.key_handler)
 
     def update(self, dt):
-        action = np.array([0.0, 0.0])
-
-        if self.key_handler[key.W]:
-            action += np.array([1, 0])
-        if self.key_handler[key.S]:
-            action += np.array([-1, 0])
-        if self.key_handler[key.A]:
-            action += np.array([-0.5, 3])
-        if self.key_handler[key.D]:
-            action += np.array([-0.5, -3])
-        if self.key_handler[key.SPACE]:
-            action = np.array([0, 0])
-
-        # obs is the image seen after taking the action but it shouldn't matter because of high framerates
-        obs, _, _, _ = self.env.step(action)
+        action = calc_input(self.key_handler)
 
         if self.is_recording:
-            self.camera.store_frame(((action[0], action[1]), obs))
+            self.camera.store_frame(((action[0], action[1]), self.env.render('rgb_array'))) #by default this gives a picture with width=800, height=600?
+
+        obs, _, _, _ = self.env.step(action) #obs is width=640, height=480
 
         self.env.render()
 
@@ -102,7 +104,16 @@ class ModelController(Controller):
     def __init__(self, args):
         super().__init__(args)
 
-        self.model = load_model("firstNet.hdf5") # https://drive.google.com/file/d/1OXIHaQ3fCP97oAhGzKIZ0lAVdrob9_iz/view?usp=share_link
+        self.model = load_model(constants.classification_model_weights_filename) # https://drive.google.com/file/d/1x99W6f25oaPZ31KXvpi2FhTWilBfNJe7/view?usp=share_link for the good weights or run the own_model_training.ipynb to acquire the file
+
+        # for the classification model
+        self.inverse_transform_to_categorical = {
+            (0.,1.,0.): np.array([1.,0.]),
+            (1.,0.,0.): np.array([.5,3.]),
+            (0.,0.,1.): np.array([.5,-3.]),
+            (0.,0.,0.): np.array([0.,0.])
+        }
+
         self.model_control = False
 
         self.env.render() # this line must be before registering hadles
@@ -126,29 +137,16 @@ class ModelController(Controller):
 
         if self.model_control:
             img = self.env.render('rgb_array')
-            scale_precent = 0.2
-            crop_amount = 35
-            newHeight = int(img.shape[0] * scale_precent)
-            newWidth = int(img.shape[1] * scale_precent)
-            down_scaled_img = cv2.resize(img, (newHeight, newWidth)) #TODO train on appropriate data
-            ds_size = down_scaled_img.shape
-            cropped_img = down_scaled_img[crop_amount : ds_size[0], 0 : ds_size[1]]
-            grayscale_img = cv2.cvtColor(cropped_img, cv2.COLOR_RGB2GRAY)
-            _, thresholded_img = cv2.threshold(grayscale_img, 150, 255, cv2.THRESH_BINARY)
-            final = cv2.resize(thresholded_img, (96, 93))
-
+            final = imageTransform(img)
             action = self.model.predict(np.array([final]), verbose=0)[0]
+
+            # if classification
+            temp = [0.,0.,0.]
+            idx = np.argmax(action)
+            temp[idx] = 1.
+            action = self.inverse_transform_to_categorical[tuple(temp)]
         else:
-            if self.key_handler[key.W]:
-                action += np.array([1, 0])
-            if self.key_handler[key.S]:
-                action += np.array([-1, 0])
-            if self.key_handler[key.A]:
-                action += np.array([-0.5, 3])
-            if self.key_handler[key.D]:
-                action += np.array([-0.5, -3])
-            if self.key_handler[key.SPACE]:
-                action = np.array([0, 0])
+            action = calc_input(self.key_handler)
 
         obs, reward, done, info = self.env.step(action)
 
