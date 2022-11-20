@@ -63,3 +63,21 @@ Making a bot learn in a simulated environment to follow the lane as accurately a
    - This will downscale, crop etc. the images, shuffle them, and store them presistantly to the folder defined in constants.py as "processed_data_path".
 5. To split the data into training, testing and validation sets: ./splitdata_demo.py
    - This will split the data and demonstrate the normalization process.
+ 
+# How to train:
+
+- Reinforcement Learning
+1. Open A2C or PPO notebook.
+2. Clone the gym-duckietown repository and install requirements.
+3. Add path to tensorboard log.
+4. Add model save path.
+5. Run the notebook cells
+
+# How to test:
+
+- Reinforcement Learning
+1. Open A2C or PPO notebook.
+2. Load model with correct path.
+3. Run model testing cell in notebook.
+
+
