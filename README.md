@@ -73,11 +73,23 @@ Making a bot learn in a simulated environment to follow the lane as accurately a
 4. Add model save path.
 5. Run the notebook cells
 
+- Imitation Learning
+1. Run through the own_model_training.ipynb notebook
+
 # How to test:
 
 - Reinforcement Learning
 1. Open A2C or PPO notebook.
 2. Load model with correct path.
 3. Run model testing cell in notebook.
+
+-Imitation Learning (Currently only the classification_model can be tested in the simulator)
+1. Pull the repository
+2. Generate classification_model_weights.hdf5 in the main directory
+   - Run the appropriate parts in own_model_training.ipynb notebook and download the generated file
+   - Download our generated file: https://drive.google.com/file/d/1x99W6f25oaPZ31KXvpi2FhTWilBfNJe7/view
+3. Run model_control.py
+4. The agent can be turned On and Off via the button "p"
+
 
 
