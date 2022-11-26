@@ -2,11 +2,12 @@ import gym
 
 from wrappers import (
     NormalizeWrapper,
-    ImgWrapper,
-    DtRewardWrapper,
-    ActionWrapper,
     ResizeWrapper,
-    SteeringToWheelVelWrapper,
+    ClipImageWrapper,
+    RGB2GrayscaleWrapper,
+    DiscreteWrapper,
+    DtRewardWrapperDistanceTravelled,
+    DtRewardCollisionAvoidance,
 )
 
 def launch_env(id=None, map="loop_empty"):
@@ -15,25 +16,29 @@ def launch_env(id=None, map="loop_empty"):
         from gym_duckietown.simulator import Simulator
 
         env = Simulator(
-            seed=123,  # random seed
+            seed=123,
             map_name=map,
-            max_steps=500001,  # we don't want the gym to reset itself
+            max_steps=500,
             domain_rand=False,
             camera_width=640,
             camera_height=480,
-            accept_start_angle_deg=4,  # start close to straight
+            accept_start_angle_deg=4,
             full_transparency=True,
+            frame_rate=30,
             distortion=True,
         )
     else:
         env = gym.make(id)
 
     # Wrappers
+    env = ClipImageWrapper(env)
+    env = RGB2GrayscaleWrapper(env)
     env = ResizeWrapper(env)
     env = NormalizeWrapper(env)
-    env = ImgWrapper(env)  # to make the images from 160x120x3 into 3x160x120
-    env = SteeringToWheelVelWrapper(env)
-    env = ActionWrapper(env)
-    # env = DtRewardWrapper(env)
+    
+    env = DiscreteWrapper(env)
+
+    env = DtRewardWrapperDistanceTravelled(env)
+    env = DtRewardCollisionAvoidance(env)
 
     return env
