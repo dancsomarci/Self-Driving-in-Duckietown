@@ -68,52 +68,15 @@ class RGB2GrayscaleWrapper(gym.ObservationWrapper):
             dtype=self.observation_space.dtype)
 
     def observation(self, obs):
-        # cv2.imshow("Camera", cv2.cvtColor(obs, cv2.COLOR_RGB2BGR))
-        # cv2.waitKey(0)
         gray = cv2.cvtColor(obs, cv2.COLOR_RGB2GRAY)
-        # cv2.imshow("Camera2", gray)
-        # cv2.waitKey(0)
 
         # Add an extra dimension, because conv lasers need an input as (batch, height, width, channels)
         gray = np.expand_dims(gray, 2)
         return gray
 
-class DiscreteWrapper(gym.ActionWrapper):
-    """
-    Duckietown environment with discrete actions (left, right, forward)
-    instead of continuous control
-    """
-
-    def __init__(self, env):
-        gym.ActionWrapper.__init__(self, env)
-        self.action_space = spaces.Discrete(3)
-        # self.action_space = spaces.Box(low=0., high=1., shape=(3,))
-
-    def action(self, action):
-        if isinstance(action, tuple):
-            action = action[0]
-        # argmax_action = np.argmax(action)
-        # sampled_action = np.random.sample([0, 1, 2, 3], 1, p=action)
-        # Turn left
-        if action == 0:
-            vels = [0., 1.]
-        #  Go forward
-        elif action == 1:
-            vels = [1., 1.]
-        # Turn right
-        elif action == 2:
-            vels = [1., 0.]
-        # # Stop
-        # elif argmax_action == 3:
-        #     vels = [0., 0.]
-        else:
-            assert False, "unknown action"
-        return np.array(vels)
-
 class DtRewardWrapperDistanceTravelled(gym.RewardWrapper):
     def __init__(self, env):
         super(DtRewardWrapperDistanceTravelled, self).__init__(env)
-        # gym_duckietown.simulator.Simulator):
         self.prev_pos = None
 
     def reward(self, reward):
@@ -139,7 +102,6 @@ class DtRewardWrapperDistanceTravelled(gym.RewardWrapper):
 
         try:
             lp = self.unwrapped.get_lane_pos2(pos, self.unwrapped.cur_angle)
-            # print("Dist: {:3.2f} | DotDir: {:3.2f} | Angle_deg: {:3.2f}".format(lp.dist, lp.dot_dir, lp.angle_deg))
         except NotInLane:
             return my_reward
 
@@ -162,7 +124,7 @@ class DtRewardCollisionAvoidance(gym.RewardWrapper):
     def __init__(self, env):
         if env is not None:
             super(DtRewardCollisionAvoidance, self).__init__(env)
-            #gym_duckietown.simulator.Simulator
+
         self.prev_proximity_penalty = 0.
         self.proximity_reward = 0.
 

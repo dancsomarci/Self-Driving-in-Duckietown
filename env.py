@@ -5,7 +5,6 @@ from wrappers import (
     ResizeWrapper,
     ClipImageWrapper,
     RGB2GrayscaleWrapper,
-    DiscreteWrapper,
     DtRewardWrapperDistanceTravelled,
     DtRewardCollisionAvoidance,
 )
@@ -19,7 +18,7 @@ def launch_env(id=None, map="loop_empty"):
             seed=123,
             map_name=map,
             max_steps=500,
-            domain_rand=False,
+            domain_rand=False, #Set to False if testing...
             camera_width=640,
             camera_height=480,
             accept_start_angle_deg=4,
@@ -35,10 +34,7 @@ def launch_env(id=None, map="loop_empty"):
     env = RGB2GrayscaleWrapper(env)
     env = ResizeWrapper(env)
     env = NormalizeWrapper(env)
-    
-    env = DiscreteWrapper(env)
 
     env = DtRewardWrapperDistanceTravelled(env)
     env = DtRewardCollisionAvoidance(env)
-
     return env
