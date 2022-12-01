@@ -19,7 +19,7 @@ def get_version(filename):
     return version
 
 
-version = get_version(filename="src/gym_duckietown/__init__.py")
+version = get_version(filename="gym_duckietown/__init__.py")
 
 line = "daffy"
 
@@ -27,7 +27,6 @@ install_requires = [
     "gym>=0.17.1",
     "numpy>=1.10.0",
     "pyglet",
-    # 'pyglet',
     "pyzmq>=16.0.0",
     "opencv-python>=3.4",
     "PyYAML>=3.11",
