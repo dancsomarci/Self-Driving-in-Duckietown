@@ -5,26 +5,22 @@ from gym_duckietown.envs import DuckietownEnv
 import os
 import numpy as np
 from tensorflow.keras.models import load_model
-import cv2
 
 from data_processor import DataProcessor
 import constants
 from preprocess import imageTransform
 
-class Controller:
+class DrivingController:
     def __init__(self, args):
-        if args.env_name is None:
-            self.env = DuckietownEnv(
-                map_name=args.map_name,
-                draw_curve=args.draw_curve,
-                draw_bbox=args.draw_bbox,
-                domain_rand=args.domain_rand,
-                frame_skip=args.frame_skip,
-                distortion=args.distortion,
-                style=args.style,
-            )
-        else:
-            self.env = gym.make(args.env_name)
+        self.env = DuckietownEnv(
+            map_name=args.map_name,
+            draw_curve=args.draw_curve,
+            draw_bbox=args.draw_bbox,
+            domain_rand=args.domain_rand,
+            frame_skip=args.frame_skip,
+            distortion=args.distortion,
+            style=args.style,
+        )
 
     def update(self, dt):
         pass
@@ -53,8 +49,34 @@ def calc_input(key_handler):
         action += np.array([-1, 0])
 
     return action
+
+class ManualDriving(DrivingController):
+    '''Handles the gym environment and controls for the bot.'''
+
+    def __init__(self, args):
+        super().__init__(args)
+
+        self.env.render() # this line must be before registering hadles
+
+        @self.env.unwrapped.window.event
+        def on_key_press(symbol, _):
+            if symbol == key.BACKSPACE:
+                self.resetEnv()
+
+            if symbol == key.ESCAPE:
+                self.stop()
+
+        self.key_handler = key.KeyStateHandler() # these 2 lines must be after "def on_key_press" !!!
+        self.env.unwrapped.window.push_handlers(self.key_handler)
+
+    def update(self, dt):
+        action = calc_input(self.key_handler)
+
+        obs, _, _, _ = self.env.step(action) #obs is width=640, height=480
+
+        self.env.render()
     
-class MyController(Controller):
+class DataRecorderController(DrivingController):
     '''Handles the gym environment and controls for the bot.'''
 
     def __init__(self, args):
@@ -98,7 +120,7 @@ class MyController(Controller):
 
         self.env.render()
 
-class ModelController(Controller):
+class ImitationLearningController(DrivingController):
     '''Switch between manual driving and AI driving with "p"'''
 
     def __init__(self, args):
@@ -149,6 +171,51 @@ class ModelController(Controller):
             action = calc_input(self.key_handler)
 
         obs, reward, done, info = self.env.step(action)
+
+        if done:
+            self.resetEnv()
+
+        self.env.render()
+
+class BaseLineModelController(DrivingController):
+    '''Switch between manual driving and AI driving with "p"'''
+
+    def __init__(self, args, model, env):
+        super().__init__(args)
+
+        self.model = model
+        self.env = env
+
+        self.predictPic = self.env.reset()
+
+        self.model_control = False
+
+        self.env.render() # this line must be before registering hadles
+
+        @self.env.unwrapped.window.event
+        def on_key_press(symbol, _):
+            if symbol == key.BACKSPACE:
+                self.resetEnv()
+
+            if symbol == key.ESCAPE:
+                self.stop()
+
+            if symbol == key.P:
+                self.model_control = not self.model_control
+
+        self.key_handler = key.KeyStateHandler() # these 2 lines must be after "def on_key_press" !!!
+        self.env.unwrapped.window.push_handlers(self.key_handler)
+
+    def update(self, dt):
+        action = np.array([0.0, 0.0])
+
+        if self.model_control:
+            action, _states = self.model.predict(self.predictPic, deterministic=True)
+        else:
+            action = calc_input(self.key_handler)
+
+        obs, reward, done, info = self.env.step(action)
+        self.predictPic = obs
 
         if done:
             self.resetEnv()

@@ -5,3 +5,4 @@ savedData/*
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
 *.hdf5
+*.zip
