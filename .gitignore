@@ -1,6 +1,6 @@
-splitData/*
-processedData/*
-savedData/*
+own_model/splitData/*
+own_model/processedData/*
+own_model/savedData/*
 *.pyc
 .ipynb_checkpoints
 */.ipynb_checkpoints/*

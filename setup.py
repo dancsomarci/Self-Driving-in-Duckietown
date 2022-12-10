@@ -34,7 +34,9 @@ install_requires = [
     "zuper-commons-z6",
     "typing_extensions",
     "Pillow",
-    "stable_baselines3[extra]"
+    "stable_baselines3[extra]",
+    "seaborn",
+    "sb3_contrib",
 ]
 
 system_version = tuple(sys.version_info)[:3]
