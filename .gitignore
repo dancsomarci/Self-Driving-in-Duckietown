@@ -6,3 +6,4 @@ own_model/savedData/*
 */.ipynb_checkpoints/*
 *.hdf5
 *.zip
+baselines/models/*
