@@ -18,78 +18,83 @@ Making a bot learn in a simulated environment to follow the lane as accurately a
 
 - Here is a preview of the controller, while driving on our own map: https://youtu.be/yeaDMzU-XvI
 - Drive link, where we store the processed data: https://drive.google.com/drive/folders/1qC-w2b-WBtoXA9E3Cql4zntL-kaU6D7D?usp=sharing
-  - Data will be added later on to reach a big enough dataset.
+  - Data will be added later on to reach a big enough dataset
 
-# Files:
+# Project structure:
 
-- my_control.py
-  - starts a simulated environment
-- conroller.py
-  - responsible for controlling the environment
-  - acquire data from the environment
-- data_processor.py
-  - saves the data to memory
-- preprocess.py
-  - preprocesses raw data with opencv library
-- Visualisation.ipynb
-  - notebook to show the dataset visualised
-- A2C_Baseline.ipynb
-  - notebook for A2C reinforcement learning algorithm
-- PPO_Baseline.ipynb
-  - notebook for PPO reinforcement learning algorithm
-- splitdata_demo.py
-  - demo for using the preprocessed data, and normalizing it for training
-- constants.py
-  - a file for constant values (e.g, data paths)
-- env.py
-  - create the environment where the reinforcement learning agent will be learning
-- wrappers.py
-  - environment wrappers to modify the base environment
-- maps directory
-  - the different maps that the bot can run on
-  - our_road.yaml - the road that we made for training
-- gym_duckietown directory
-  - the different file for the simulation environment
-    (the files are taken from the following publicly available repo: https://github.com/duckietown/gym-duckietown/tree/daffy/src/gym_duckietown)
-
-# How to run:
-
-1. Start a console.
-2. Navigate to the directory where my_control.py is located.
-3. To run the simulation: ./my_control.py [--map-name map_name]
-   - To start or stop collecting data: press P or left Shift once
-   - To exit: press escape
-4. To start the preprocessing of raw data: ./preprocess.py
-   - This will downscale, crop etc. the images, shuffle them, and store them presistantly to the folder defined in constants.py as "processed_data_path".
-5. To split the data into training, testing and validation sets: ./splitdata_demo.py
-   - This will split the data and demonstrate the normalization process.
- 
-# How to train:
-
-- Reinforcement Learning
-1. Open A2C or PPO notebook.
-2. Clone the gym-duckietown repository and install requirements.
-3. Add path to tensorboard log.
-4. Add model save path.
-5. Run the notebook cells
-
-- Imitation Learning
-1. Run through the own_model_training.ipynb notebook
-
-# How to test:
-
-- Reinforcement Learning
-1. Open A2C or PPO notebook.
-2. Load model with correct path.
-3. Run model testing cell in notebook.
-
--Imitation Learning (Currently only the classification_model can be tested in the simulator)
-1. Pull the repository
-2. Generate classification_model_weights.hdf5 in the main directory
-   - Run the appropriate parts in own_model_training.ipynb notebook and download the generated file
-   - Download our generated file: https://drive.google.com/file/d/1x99W6f25oaPZ31KXvpi2FhTWilBfNJe7/view
-3. Run model_control.py
-4. The agent can be turned On and Off via the button "p"
+- gym_duckietown : modified gym environment for training
+- driving : helpers for handling user input during driving
+- own_model : code for imitationlearning
+- baselines : industry standard algorithms for solving the problem
 
 
+# Setup
 
+Create a conda environment from `environment.yml`:
+````
+conda env create -f environment.yml
+````
+After you can run the desired files in the subdirectories.
+
+# Driving
+
+For testing out maps, and the simulation environment with an easy to use, and ergonomic controls navigate to the `driving` folder:
+````
+python manual.py [--map-name "map_name"]
+````
+Running the script will present you with a graphical view to the simulator. Move the agent with the "wasd" keys, press `esc` to quit. An optional parameter is the map name which must have a corresponding `maps\map_name.yml` in the current working directory where the script was launched.
+
+# Imitation learning
+
+## Files
+
+The related files can be found in the `own_model` folder.
+
+- constans.py : constants for preprocessing the data
+- data_processor.py : handles saving of frames from simulator
+- datarecorder.py : simulator variant where humans can generate data for imitation learning purposes
+- imitation_learning_training.ipynb : training of the imitation learning models (contains experiments with different models and architectures)
+- preprocess.py : image processing with opencv
+- test_model.py : testing the trained model
+- visualization.ipynb : visualization of the image processing steps
+
+## Here are the results of the training:
+
+````
+missing video
+````
+
+## Testing
+
+For testing our model, choose one from the imitation_learning_training.ipynb file and generate the `.hdf5` file. Another option is to download our already trained model from:
+```
+missing link
+```
+After downloading the `.hdf5` set the path in the `test_model.py` and run the script.
+You can controll the agent manually with "wasd" to setup the desired starting position and press `p` to let the agent take over.
+
+For changing maps check out the [driving](#driving) section above. The `test_model.py` script can be parametrized just as `manual.py`.
+
+# Baseline solutions
+
+The related files can be found in the `baselines` folder.
+There are 2 files for each baseline algorithm:
+
+- baseline_training.py : handles the training process
+- baseline_test.py : testing the taught model
+
+There's also an additional file called `wrappers.py` which contains the necessary extensions for the basic environment for modifying actions, rewards and observations.
+
+For testing the models traing your own parameters via the `baseline_training.py` or download our solutions from the following link:
+````
+missing link
+````
+
+# DQN
+````
+missing video
+````
+
+
+# PPO
+[![trained ppo model video](http://img.youtube.com/vi/eLKxaiax6Ks&ab/0.jpg)](https://www.youtube.com/watch?v=eLKxaiax6Ks&ab_channel=NyistMilan "PPO Model")

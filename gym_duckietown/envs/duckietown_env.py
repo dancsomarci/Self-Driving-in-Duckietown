@@ -17,7 +17,7 @@ class DuckietownEnv(Simulator):
         logger.info("using DuckietownEnv")
 
         self.action_space = spaces.Box(low=np.array([-1, -1]), high=np.array([1, 1]), dtype=np.float32)
-
+        
         # Should be adjusted so that the effective speed of the robot is 0.2 m/s
         self.gain = gain
 

@@ -672,7 +672,7 @@ class Simulator(gym.Env):
                 if not self.drivable_tiles:
                     msg = "There are no drivable tiles. Use start_tile or self.user_tile_start"
                     raise Exception(msg)
-                tile_idx = self.np_random.integers(0, len(self.drivable_tiles))
+                tile_idx = self.np_random.randint(0, len(self.drivable_tiles))
                 tile = self.drivable_tiles[tile_idx]
 
         # If the map specifies a starting pose
