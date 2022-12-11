@@ -21,7 +21,7 @@ class ImitationLearningController(ManualDrivingController):
     def __init__(self, args):
         super().__init__(args)
 
-        self.model = load_model(constants.classification_model_weights_filename) # https://drive.google.com/file/d/1x99W6f25oaPZ31KXvpi2FhTWilBfNJe7/view?usp=share_link for the good weights or run the own_model_training.ipynb to acquire the file
+        self.model = load_model(constants.classification_model_weights_filename)
 
         # for the classification model
         self.inverse_transform_to_categorical = {
