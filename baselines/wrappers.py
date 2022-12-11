@@ -1,15 +1,14 @@
 import numpy as np
 import cv2
-from gym import spaces
 import gym
-import numpy as np
-from gym_duckietown.simulator import NotInLane
+from gym import spaces
 from matplotlib import pyplot as plt
 import seaborn
-from mpl_toolkits.mplot3d import Axes3D
-from scipy.stats import norm
-import logging
 
+import sys
+from os import path
+sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
+from gym_duckietown.simulator import NotInLane
 
 class ResizeWrapper(gym.ObservationWrapper):
     def __init__(self, env=None, shape=(120, 160)):
@@ -18,7 +17,6 @@ class ResizeWrapper(gym.ObservationWrapper):
             self.shape = eval(shape) + (self.observation_space.shape[2],)
         else:
             self.shape = shape + (self.observation_space.shape[2],)
-        #self.observation_space.shape = shape
         self.observation_space = spaces.Box(
             self.observation_space.low[0, 0, 0],
             self.observation_space.high[0, 0, 0],
@@ -139,57 +137,10 @@ class DQNActionWrapperSimple(gym.ActionWrapper):
         else:
             assert False, "unknown action"
         return np.array(vels)
-        
-class DQNActionWrapper(gym.ActionWrapper):
-    def __init__(self, env):
-        super().__init__(env)
-        
-    def action(self, act):
-        if act == 0:
-            act = np.array([0.5, -3.])
-        elif act == 1:
-            act = np.array([0.5, 3.0])
-        elif act == 2:
-            act = np.array([1.0, 0.0])
 
-        #change velocity and steering angle to differential motorspeeds
-        gain=1.0
-        trim=0.0
-        radius=0.0318
-        k=27.0
-        limit=1.0
-        vel, angle = act
-        baseline = self.unwrapped.wheel_dist
-        k_r = k
-        k_l = k
-        k_r_inv = (gain + trim) / k_r
-        k_l_inv = (gain - trim) / k_l
-        omega_r = (vel + 0.5 * angle * baseline) / radius
-        omega_l = (vel - 0.5 * angle * baseline) / radius
-        u_r = omega_r * k_r_inv
-        u_l = omega_l * k_l_inv
-        u_r_limited = max(min(u_r, limit), -limit)
-        u_l_limited = max(min(u_l, limit), -limit)
-        vels = np.array([u_l_limited, u_r_limited])
-
-        return vels
-
-from preprocess import imageTransform
-
-class MyObservationWrapper(gym.ObservationWrapper):
+class PreprocessObservationWrapper(gym.ObservationWrapper):
     def __init__(self, env=None, top_margin_divider=3):
-        super(MyObservationWrapper, self).__init__(env)
-        # img_height, img_width, depth = self.observation_space.shape
-        # top_margin = img_height // top_margin_divider
-        # img_height = img_height - top_margin
-        # self.roi = [0, top_margin, img_width, img_height]
-
-        # self.observation_space = spaces.Box(
-        #     self.observation_space.low[0, 0, 0],
-        #     self.observation_space.high[0, 0, 0],
-        #     (1, 61, 128),
-        #     dtype=self.observation_space.dtype)
-
+        super(PreprocessObservationWrapper, self).__init__(env)
         self.observation_space = spaces.Box(
             self.observation_space.low[0, 0, 0],
             self.observation_space.high[0, 0, 0],
@@ -197,17 +148,67 @@ class MyObservationWrapper(gym.ObservationWrapper):
             dtype=self.observation_space.dtype)
 
     def observation(self, observation):
-        observation = imageTransform(observation)
-        #observation.reshape((1, 61,128))
-        # print(observation.shape)
-        # # from matplotlib import pyplot as plt
-        # # plt.imshow(observation, interpolation='nearest')
-        # # plt.show()
-        # input("Press anything to continue...")
+        img = cv2.resize(observation, (480, 640))
 
-        # r = self.roi
-        # observation = observation[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
-        return observation
+        scale_precent = 0.2     # used for downscaling
+        crop_amount = 35        # pixel amount for cropping
+
+        # downscaling
+        newHeight = int(img.shape[0] * scale_precent)
+        newWidth = int(img.shape[1] * scale_precent)
+        down_scaled_img = cv2.resize(img, (newHeight, newWidth))
+
+        # cropping
+        ds_size = down_scaled_img.shape
+        cropped_img = down_scaled_img[crop_amount:,:]
+
+        # grayscaling
+        grayscale_img = cv2.cvtColor(cropped_img, cv2.COLOR_RGB2GRAY)
+
+        # thresholding
+        _, thresholded_img = cv2.threshold(grayscale_img, 150, 255, cv2.THRESH_BINARY)
+
+        # binary image
+        normalized_img = thresholded_img / 255
+
+        return normalized_img
+
+class PreprocessForCnnObservationWrapper(gym.ObservationWrapper):
+    def __init__(self, env=None, top_margin_divider=3):
+        super(PreprocessForCnnObservationWrapper, self).__init__(env)
+        self.observation_space = spaces.Box(
+            self.observation_space.low[0, 0, 0],
+            self.observation_space.high[0, 0, 0],
+            (1, 61, 128),
+            dtype=self.observation_space.dtype)
+
+    def observation(self, observation):
+        img = cv2.resize(observation, (480, 640))
+
+        scale_precent = 0.2     # used for downscaling
+        crop_amount = 35        # pixel amount for cropping
+
+        # downscaling
+        newHeight = int(img.shape[0] * scale_precent)
+        newWidth = int(img.shape[1] * scale_precent)
+        down_scaled_img = cv2.resize(img, (newHeight, newWidth))
+
+        # cropping
+        ds_size = down_scaled_img.shape
+        cropped_img = down_scaled_img[crop_amount:,:]
+
+        # grayscaling
+        grayscale_img = cv2.cvtColor(cropped_img, cv2.COLOR_RGB2GRAY)
+
+        # thresholding
+        _, thresholded_img = cv2.threshold(grayscale_img, 150, 255, cv2.THRESH_BINARY)
+
+        # binary image
+        normalized_img = thresholded_img / 255
+
+        normalized_img.reshape((1, 61, 128))
+
+        return normalized_img
 
 class DtRewardWrapperDistanceTravelled(gym.RewardWrapper):
     def __init__(self, env):

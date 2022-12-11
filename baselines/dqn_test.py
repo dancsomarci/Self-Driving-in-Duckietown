@@ -1,11 +1,10 @@
-from env import master_dqn_env
+from dqn_training import dqn_env
 
 from stable_baselines3 import DQN
-from stable_baselines3.common.callbacks import CheckpointCallback
 from stable_baselines3.common.vec_env import DummyVecEnv
 
-env = DummyVecEnv([master_dqn_env])
-model = DQN.load("..\\Self-Driving-in-Duckietown\\models\\dqn_model_230000_steps")
+env = DummyVecEnv([dqn_env])
+model = DQN.load("dqn_model_saves\\dqn_model_1000_steps")
 
 obs = env.reset()
 while True:

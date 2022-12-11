@@ -1,11 +1,41 @@
-from env import master_env
-
 from sb3_contrib import TRPO
-#from stable_baselines3 import TRPO
 from stable_baselines3.common.callbacks import CheckpointCallback
 from stable_baselines3.common.vec_env import DummyVecEnv
 
-env = DummyVecEnv([master_env])
+import sys
+from os import path
+sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
+from gym_duckietown.simulator import Simulator
+
+from wrappers import (
+    NormalizeWrapper,
+    ResizeWrapper,
+    ClipImageWrapper,
+    RGB2GrayscaleWrapper,
+    DtRewardWrapperDistanceTravelled,
+)
+
+def trpo_env():
+  env = Simulator(
+            seed=123,
+            map_name="our_road_extreme",
+            max_steps=500,
+            domain_rand=True, #Set to False if testing...
+            camera_width=640,
+            camera_height=480,
+            accept_start_angle_deg=4,
+            full_transparency=True,
+            frame_rate=30,
+            distortion=True,
+        )
+  env = ClipImageWrapper(env)
+  env = RGB2GrayscaleWrapper(env)
+  env = ResizeWrapper(env)
+  env = NormalizeWrapper(env)
+  env = DtRewardWrapperDistanceTravelled(env)
+  return env
+
+env = DummyVecEnv([trpo_env])
 
 trpo_model = TRPO(policy='MlpPolicy',
                 env=env,
@@ -33,8 +63,8 @@ trpo_model = TRPO(policy='MlpPolicy',
             )
 
 checkpoint_callback = CheckpointCallback(
-  save_freq=10,
-  save_path="..\\Self-Driving-in-Duckietown\\models\\",
+  save_freq=1000,
+  save_path="trpo_model_saves\\",
   name_prefix="trpo_model",)
 
 trpo_model.learn(total_timesteps=1000000, progress_bar=True, callback=checkpoint_callback)
