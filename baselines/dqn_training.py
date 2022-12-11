@@ -42,6 +42,7 @@ def script():
                   env=env,
                   buffer_size=20000,
                   learning_starts=20000,
+                  tensorboard_log="tb_logs\\dqn\\",
                   seed=123)
 
   checkpoint_callback = CheckpointCallback(

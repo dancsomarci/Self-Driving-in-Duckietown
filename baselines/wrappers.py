@@ -10,6 +10,66 @@ from os import path
 sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
 from gym_duckietown.simulator import NotInLane
 
+class PreprocessObservationWrapper(gym.ObservationWrapper):
+    def __init__(self, env=None, top_margin_divider=3):
+        super(PreprocessObservationWrapper, self).__init__(env)
+        self.observation_space = spaces.Box(
+            self.observation_space.low[0, 0, 0],
+            self.observation_space.high[0, 0, 0],
+            (61, 128),
+            dtype=self.observation_space.dtype)
+
+    def transform_img(self, img):
+        img = cv2.resize(img, (480, 640))
+        scale_precent = 0.2
+        crop_amount = 35
+        newHeight = int(img.shape[0] * scale_precent)
+        newWidth = int(img.shape[1] * scale_precent)
+        down_scaled_img = cv2.resize(img, (newHeight, newWidth))
+        ds_size = down_scaled_img.shape
+        cropped_img = down_scaled_img[crop_amount:,:]
+        grayscale_img = cv2.cvtColor(cropped_img, cv2.COLOR_RGB2GRAY)
+        _, thresholded_img = cv2.threshold(grayscale_img, 150, 255, cv2.THRESH_BINARY)
+        normalized_img = thresholded_img / 255
+        return normalized_img
+
+    def observation(self, observation):
+        return self.transform_img(observation)
+
+
+class PreprocessForCnnObservationWrapper(PreprocessObservationWrapper):
+    def __init__(self, env=None, top_margin_divider=3):
+        super(PreprocessObservationWrapper, self).__init__(env)
+        self.observation_space = spaces.Box(
+            self.observation_space.low[0, 0, 0],
+            self.observation_space.high[0, 0, 0],
+            (1, 61, 128),
+            dtype=self.observation_space.dtype)
+
+    def observation(self, observation):
+        transformed = self.transform_img(observation)
+        transformed.reshape((1, 61, 128))
+        return transformed
+
+
+class DQNActionWrapperSimple(gym.ActionWrapper):
+    def __init__(self, env):
+        super().__init__(env)
+        
+    def action(self, act):
+        if act == 0:
+            vels = [0., 1.]
+        #  Go forward
+        elif act == 1:
+            vels = [1., 1.]
+        # Turn right
+        elif act == 2:
+            vels = [1., 0.]
+        else:
+            assert False, "unknown action"
+        return np.array(vels)
+
+
 class ResizeWrapper(gym.ObservationWrapper):
     def __init__(self, env=None, shape=(120, 160)):
         super(ResizeWrapper, self).__init__(env)
@@ -17,6 +77,7 @@ class ResizeWrapper(gym.ObservationWrapper):
             self.shape = eval(shape) + (self.observation_space.shape[2],)
         else:
             self.shape = shape + (self.observation_space.shape[2],)
+        #self.observation_space.shape = shape
         self.observation_space = spaces.Box(
             self.observation_space.low[0, 0, 0],
             self.observation_space.high[0, 0, 0],
@@ -51,6 +112,7 @@ class ClipImageWrapper(gym.ObservationWrapper):
         observation = observation[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
         return observation
 
+
 class NormalizeWrapper(gym.ObservationWrapper):
     def __init__(self, env=None):
         super(NormalizeWrapper, self).__init__(env)
@@ -65,6 +127,7 @@ class NormalizeWrapper(gym.ObservationWrapper):
         else:
             return (obs - self.obs_lo) / (self.obs_hi - self.obs_lo)
 
+
 class RGB2GrayscaleWrapper(gym.ObservationWrapper):
     def __init__(self, env=None):
         super(RGB2GrayscaleWrapper, self).__init__(env)
@@ -77,138 +140,8 @@ class RGB2GrayscaleWrapper(gym.ObservationWrapper):
     def observation(self, obs):
         gray = cv2.cvtColor(obs, cv2.COLOR_RGB2GRAY)
         gray = np.expand_dims(gray, 2)
-        return 
+        return gray
 
-class A2CActionWrapper(gym.ActionWrapper):
-    def __init__(self, env):
-        super().__init__(env)
-        
-    def action(self, act):
-        if act[0] < 0.3:
-            act[0] = 0.3
-
-        gain=1.0
-        trim=0.0
-        radius=0.0318
-        k=27.0
-        limit=1.0
-
-        vel, angle = act
-
-        # Distance between the wheels
-        baseline = self.unwrapped.wheel_dist
-
-        # assuming same motor constants k for both motors
-        k_r = k
-        k_l = k
-
-        # adjusting k by gain and trim
-        k_r_inv = (gain + trim) / k_r
-        k_l_inv = (gain - trim) / k_l
-
-        omega_r = (vel + 0.5 * angle * baseline) / radius
-        omega_l = (vel - 0.5 * angle * baseline) / radius
-
-        # conversion from motor rotation rate to duty cycle
-        u_r = omega_r * k_r_inv
-        u_l = omega_l * k_l_inv
-
-        # limiting output to limit, which is 1.0 for the duckiebot
-        u_r_limited = max(min(u_r, limit), -limit)
-        u_l_limited = max(min(u_l, limit), -limit)
-
-        vels = np.array([u_l_limited, u_r_limited])
-
-        return vels
-
-class DQNActionWrapperSimple(gym.ActionWrapper):
-    def __init__(self, env):
-        super().__init__(env)
-        
-    def action(self, act):
-        if act == 0:
-            vels = [0., 1.]
-        #  Go forward
-        elif act == 1:
-            vels = [1., 1.]
-        # Turn right
-        elif act == 2:
-            vels = [1., 0.]
-        else:
-            assert False, "unknown action"
-        return np.array(vels)
-
-class PreprocessObservationWrapper(gym.ObservationWrapper):
-    def __init__(self, env=None, top_margin_divider=3):
-        super(PreprocessObservationWrapper, self).__init__(env)
-        self.observation_space = spaces.Box(
-            self.observation_space.low[0, 0, 0],
-            self.observation_space.high[0, 0, 0],
-            (61, 128),
-            dtype=self.observation_space.dtype)
-
-    def observation(self, observation):
-        img = cv2.resize(observation, (480, 640))
-
-        scale_precent = 0.2     # used for downscaling
-        crop_amount = 35        # pixel amount for cropping
-
-        # downscaling
-        newHeight = int(img.shape[0] * scale_precent)
-        newWidth = int(img.shape[1] * scale_precent)
-        down_scaled_img = cv2.resize(img, (newHeight, newWidth))
-
-        # cropping
-        ds_size = down_scaled_img.shape
-        cropped_img = down_scaled_img[crop_amount:,:]
-
-        # grayscaling
-        grayscale_img = cv2.cvtColor(cropped_img, cv2.COLOR_RGB2GRAY)
-
-        # thresholding
-        _, thresholded_img = cv2.threshold(grayscale_img, 150, 255, cv2.THRESH_BINARY)
-
-        # binary image
-        normalized_img = thresholded_img / 255
-
-        return normalized_img
-
-class PreprocessForCnnObservationWrapper(gym.ObservationWrapper):
-    def __init__(self, env=None, top_margin_divider=3):
-        super(PreprocessForCnnObservationWrapper, self).__init__(env)
-        self.observation_space = spaces.Box(
-            self.observation_space.low[0, 0, 0],
-            self.observation_space.high[0, 0, 0],
-            (1, 61, 128),
-            dtype=self.observation_space.dtype)
-
-    def observation(self, observation):
-        img = cv2.resize(observation, (480, 640))
-
-        scale_precent = 0.2     # used for downscaling
-        crop_amount = 35        # pixel amount for cropping
-
-        # downscaling
-        newHeight = int(img.shape[0] * scale_precent)
-        newWidth = int(img.shape[1] * scale_precent)
-        down_scaled_img = cv2.resize(img, (newHeight, newWidth))
-
-        # cropping
-        ds_size = down_scaled_img.shape
-        cropped_img = down_scaled_img[crop_amount:,:]
-
-        # grayscaling
-        grayscale_img = cv2.cvtColor(cropped_img, cv2.COLOR_RGB2GRAY)
-
-        # thresholding
-        _, thresholded_img = cv2.threshold(grayscale_img, 150, 255, cv2.THRESH_BINARY)
-
-        # binary image
-        normalized_img = thresholded_img / 255
-
-        normalized_img.reshape((1, 61, 128))
-
-        return normalized_img
 
 class DtRewardWrapperDistanceTravelled(gym.RewardWrapper):
     def __init__(self, env):
@@ -438,85 +371,33 @@ class DtRewardVelocity(gym.RewardWrapper):
         return observation, self.reward(reward), done, info
 
 
-# class DtRewardCollisionAvoidance(gym.RewardWrapper):
-#     def __init__(self, env):
-#         if env is not None:
-#             super(DtRewardCollisionAvoidance, self).__init__(env)
-#             # gym_duckietown.simulator.Simulator
-#         self.prev_proximity_penalty = 0.
-#         self.proximity_reward = 0.
+class DtRewardCollisionAvoidance(gym.RewardWrapper):
+    def __init__(self, env):
+        if env is not None:
+            super(DtRewardCollisionAvoidance, self).__init__(env)
+            # gym_duckietown.simulator.Simulator
+        self.prev_proximity_penalty = 0.
+        self.proximity_reward = 0.
 
-#     def reward(self, reward):
-#         # Proximity reward is proportional to the change of proximity penalty. Range is ~ 0 - +1.5 (empirical)
-#         # Moving away from an obstacle is promoted, if the robot and the obstacle are close to each other.
-#         proximity_penalty = self.unwrapped.proximity_penalty2(self.unwrapped.cur_pos, self.unwrapped.cur_angle)
-#         self.proximity_reward = -(self.prev_proximity_penalty - proximity_penalty) * 50
-#         if self.proximity_reward < 0.:
-#             self.proximity_reward = 0.
-#         logger.debug("Proximity reward: {:.3f}".format(self.proximity_reward))
-#         self.prev_proximity_penalty = proximity_penalty
-#         return reward + self.proximity_reward
+    def reward(self, reward):
+        # Proximity reward is proportional to the change of proximity penalty. Range is ~ 0 - +1.5 (empirical)
+        # Moving away from an obstacle is promoted, if the robot and the obstacle are close to each other.
+        proximity_penalty = self.unwrapped.proximity_penalty2(self.unwrapped.cur_pos, self.unwrapped.cur_angle)
+        self.proximity_reward = -(self.prev_proximity_penalty - proximity_penalty) * 50
+        if self.proximity_reward < 0.:
+            self.proximity_reward = 0.
+        # .debug("Proximity reward: {:.3f}".format(self.proximity_reward))
+        self.prev_proximity_penalty = proximity_penalty
+        return reward + self.proximity_reward
 
-#     def reset(self, **kwargs):
-#         self.prev_proximity_penalty = 0.
-#         self.proximity_reward = 0.
-#         return self.env.reset(**kwargs)
-
-#     def step(self, action):
-#         observation, reward, done, info = self.env.step(action)
-#         if 'custom_rewards' not in info.keys():
-#             info['custom_rewards'] = {}
-#         info['custom_rewards']['collision_avoidance'] = self.proximity_reward
-#         return observation, self.reward(reward), done, info
-
-
-# class DtRewardProximityPenalty(gym.RewardWrapper):
-#     def __init__(self, env):
-#         if env is not None:
-#             super(DtRewardProximityPenalty, self).__init__(env)
-#         self.proximity_reward = 0.
-
-#     def reward(self, reward):
-#         proximity_penalty = self.unwrapped.proximity_penalty2(self.unwrapped.cur_pos, self.unwrapped.cur_angle)
-#         self.proximity_reward = proximity_penalty * 2.5
-#         logger.debug("Proximity reward: {:.3f}".format(self.proximity_reward))
-#         return reward + self.proximity_reward
-
-#     def reset(self, **kwargs):
-#         self.proximity_reward = 0.
-#         return self.env.reset(**kwargs)
-
-#     def step(self, action):
-#         observation, reward, done, info = self.env.step(action)
-#         if 'custom_rewards' not in info.keys():
-#             info['custom_rewards'] = {}
-#         info['custom_rewards']['collision_avoidance'] = self.proximity_reward
-#         return observation, self.reward(reward), done, info
-
-class InconvenientSpawnFixingWrapper(gym.Wrapper):
-    """
-    Fixes the "Exception: Could not find a valid starting pose after 5000 attempts" in duckietown-gym-daffy 5.0.13
-    The robot is first placed in a random drivable tile, than a configuration is sampled on this tile. If the later
-    step fails, it is repeated (up to 5000 times). If a tile has too many obstacles on it, it might not have any
-    convenient (collision risking) configurations, so another tile should be selected. Instead of selecting a new tile,
-    Duckietown gym just raises the above exception.
-    This wrapper calls reset() again and again if a new tile has to be sampled.
-    .. note::
-        ``gym_duckietown.simulator.Simulator.reset()`` is called in ``gym_duckietown.simulator.Simulator.__init__(...)``.
-        **Simulator instantiation should also be wrapped in a similar while loop!!!**
-    """
     def reset(self, **kwargs):
-        spawn_successful = False
-        spawn_attempts = 1
-        while not spawn_successful:
-            try:
-                ret = self.env.reset(**kwargs)
-                spawn_successful = True
-            except Exception as e:
-                self.unwrapped.seed_value += 1   # Otherwise it selects the same tile in the next attempt
-                self.unwrapped.seed(self.unwrapped.seed_value)
-                #logger.error("{}; Retrying with new seed: {}".format(e, self.unwrapped.seed_value))
-                spawn_attempts += 1
-        #logger.debug("Reset and Spawn successful after {} attempts".format(spawn_attempts))
-        return ret
+        self.prev_proximity_penalty = 0.
+        self.proximity_reward = 0.
+        return self.env.reset(**kwargs)
 
+    def step(self, action):
+        observation, reward, done, info = self.env.step(action)
+        if 'custom_rewards' not in info.keys():
+            info['custom_rewards'] = {}
+        info['custom_rewards']['collision_avoidance'] = self.proximity_reward
+        return observation, self.reward(reward), done, info
