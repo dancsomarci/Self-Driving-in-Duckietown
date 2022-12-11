@@ -58,17 +58,11 @@ The related files can be found in the `own_model` folder.
 - test_model.py : testing the trained model
 - visualization.ipynb : visualization of the image processing steps
 
-## Here are the results of the training:
-
-````
-missing video
-````
-
 ## Testing
 
 For testing our model, choose one from the imitation_learning_training.ipynb file and generate the `.hdf5` file. Another option is to download our already trained model from:
 ```
-missing link
+https://drive.google.com/drive/folders/1NMN81yTgm0qJNJlXYJEBY0FYbkZKUhZa?usp=share_link
 ```
 After downloading the `.hdf5` set the path in the `test_model.py` and run the script.
 You can controll the agent manually with "wasd" to setup the desired starting position and press `p` to let the agent take over.
@@ -87,14 +81,10 @@ There's also an additional file called `wrappers.py` which contains the necessar
 
 For testing the models traing your own parameters via the `baseline_training.py` or download our solutions from the following link:
 ````
-missing link
+https://drive.google.com/drive/folders/1NMN81yTgm0qJNJlXYJEBY0FYbkZKUhZa?usp=share_link
 ````
-
-# DQN
-````
-missing video
-````
-
 
 # PPO
-[![trained ppo model video](http://img.youtube.com/vi/eLKxaiax6Ks&ab/0.jpg)](https://www.youtube.com/watch?v=eLKxaiax6Ks&ab_channel=NyistMilan "PPO Model")
+````
+https://www.youtube.com/watch?v=eLKxaiax6Ks&ab_channel=NyistMilan
+````
